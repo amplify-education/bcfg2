@@ -34,4 +34,4 @@ class Properties(Bcfg2.Server.Plugin.Plugin,
         self.store = PropDirectoryBacked(self.data, core.fam)
 
     def get_additional_data(self, _):
-        return copy.deepcopy(self.store.entries)
+        return copy.copy(self.store.entries)

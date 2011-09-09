@@ -34,5 +34,5 @@ class Base(Bcfg2.Server.Plugin.Plugin,
         fragments = reduce(lambda x, y: x+y,
                            [base.Match(metadata) for base
                             in self.entries.values()], [])
-        [ret.append(copy.deepcopy(frag)) for frag in fragments]
+        [ret.append(copy.copy(frag)) for frag in fragments]
         return [ret]
