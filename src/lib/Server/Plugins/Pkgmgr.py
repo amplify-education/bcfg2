@@ -4,6 +4,7 @@ __revision__ = '$Revision$'
 import logging
 import re
 import Bcfg2.Server.Plugin
+from sets import Set
 
 logger = logging.getLogger('Bcfg2.Plugins.Pkgmgr')
 
@@ -57,8 +58,8 @@ class PNode(Bcfg2.Server.Plugin.INode):
         if not pdict.has_key('Package'):
             pdict['Package'] = set()
         for child in data.getchildren():
-            for attr in [key for key in data.attrib.keys() \
-                         if key != 'name' and not child.attrib.has_key(key)]:
+            attrs = Set(data.attrib.keys()).difference(child.attrib + ['name'])
+            for attr in attrs:
                 try:
                     child.set(attr, data.get(attr))
                 except:
