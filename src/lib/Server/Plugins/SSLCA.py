@@ -175,8 +175,11 @@ class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
             Bcfg2.Server.Plugin.bind_info(entry, metadata)
 
     def verify_cert(self, filename, key_filename, entry):
-        return (self.verify_cert_against_ca(filename, entry) and
-                self.verify_cert_against_key(filename, key_filename))
+        do_verify = self.CAs[self.cert_specs[entry.get('name')]['ca']].get('verify_certs', True)
+        if do_verify:
+            return (self.verify_cert_against_ca(filename, entry) and
+                    self.verify_cert_against_key(filename, key_filename))
+        return True
 
     def verify_cert_against_ca(self, filename, entry):
         """
@@ -186,7 +189,7 @@ class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
         chaincert = \
             self.CAs[self.cert_specs[entry.get('name')]['ca']].get('chaincert')
         cert = self.data + filename
-        res = Popen(["openssl", "verify", "-CAfile", chaincert, cert],
+        res = Popen(["openssl", "verify", "-untrusted", chaincert, "-purpose", "sslserver", cert],
                     stdout=PIPE, stderr=STDOUT).stdout.read()
         if res == cert + ": OK\n":
             self.debug_log("SSLCA: %s verified successfully against CA" %
