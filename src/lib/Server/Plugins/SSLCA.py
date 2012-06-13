@@ -189,7 +189,8 @@ class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
         chaincert = \
             self.CAs[self.cert_specs[entry.get('name')]['ca']].get('chaincert')
         cert = self.data + filename
-        res = Popen(["openssl", "verify", "-untrusted", chaincert, "-purpose", "sslserver", cert],
+        res = Popen(["openssl", "verify", "-untrusted", chaincert, "-purpose",
+                     "sslserver", cert],
                     stdout=PIPE, stderr=STDOUT).stdout.read()
         if res == cert + ": OK\n":
             self.debug_log("SSLCA: %s verified successfully against CA" %
@@ -207,10 +208,12 @@ class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
         key = self.data + key_filename
         cert_md5 = \
             md5(Popen(["openssl", "x509", "-noout", "-modulus", "-in", cert],
-                      stdout=PIPE, stderr=STDOUT).stdout.read())
+                      stdout=PIPE,
+                      stderr=STDOUT).stdout.read().strip()).hexdigest()
         key_md5 = \
             md5(Popen(["openssl", "rsa", "-noout", "-modulus", "-in", key],
-                      stdout=PIPE, stderr=STDOUT).stdout.read())
+                      stdout=PIPE,
+                      stderr=STDOUT).stdout.read().strip()).hexdigest()
         if cert_md5 == key_md5:
             self.debug_log("SSLCA: %s verified successfully against key %s" %
                            (filename, key_filename))
