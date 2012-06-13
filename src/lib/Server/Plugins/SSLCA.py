@@ -207,7 +207,7 @@ class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
                       stdout=PIPE, stderr=STDOUT).stdout.read())
         key_md5 = \
             md5(Popen(["openssl", "rsa", "-noout", "-modulus", "-in", cert],
-                      stdout=PIPE, stderr=STDOUT).stdout.read()
+                      stdout=PIPE, stderr=STDOUT).stdout.read())
         if cert_md5 == key_md5:
             self.debug_log("SSLCA: %s verified successfully against key %s" %
                            (filename, key_filename))
