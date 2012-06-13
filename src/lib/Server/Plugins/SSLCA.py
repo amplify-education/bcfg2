@@ -3,12 +3,15 @@ import Bcfg2.Options
 import lxml.etree
 import posixpath
 import tempfile
-import pipes
 import os
 from subprocess import Popen, PIPE, STDOUT
 # Compatibility import
 from Bcfg2.Bcfg2Py3k import ConfigParser
 
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5
 
 class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
     """
@@ -172,17 +175,16 @@ class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
             Bcfg2.Server.Plugin.bind_info(entry, metadata)
 
     def verify_cert(self, filename, key_filename, entry):
-        if self.verify_cert_against_ca(filename, entry):
-            if self.verify_cert_against_key(filename, key_filename):
-                return True
-        return False
+        return (self.verify_cert_against_ca(filename, entry) and
+                self.verify_cert_against_key(filename, key_filename))
 
     def verify_cert_against_ca(self, filename, entry):
         """
         check that a certificate validates against the ca cert,
         and that it has not expired.
         """
-        chaincert = self.CAs[self.cert_specs[entry.get('name')]['ca']].get('chaincert')
+        chaincert = \
+            self.CAs[self.cert_specs[entry.get('name')]['ca']].get('chaincert')
         cert = self.data + filename
         res = Popen(["openssl", "verify", "-CAfile", chaincert, cert],
                     stdout=PIPE, stderr=STDOUT).stdout.read()
@@ -200,12 +202,12 @@ class SSLCA(Bcfg2.Server.Plugin.GroupSpool):
         """
         cert = self.data + filename
         key = self.data + key_filename
-        cmd = ("openssl x509 -noout -modulus -in %s | openssl md5" %
-               pipes.quote(cert))
-        cert_md5 = Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT).stdout.read()
-        cmd = ("openssl rsa -noout -modulus -in %s | openssl md5" %
-               pipes.quote(key))
-        key_md5 = Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT).stdout.read()
+        cert_md5 = \
+            md5(Popen(["openssl", "x509", "-noout", "-modulus", "-in", cert],
+                      stdout=PIPE, stderr=STDOUT).stdout.read())
+        key_md5 = \
+            md5(Popen(["openssl", "rsa", "-noout", "-modulus", "-in", cert],
+                      stdout=PIPE, stderr=STDOUT).stdout.read()
         if cert_md5 == key_md5:
             self.debug_log("SSLCA: %s verified successfully against key %s" %
                            (filename, key_filename))
